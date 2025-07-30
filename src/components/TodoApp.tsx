@@ -1,10 +1,10 @@
 import React from 'react';
-import { useTodos } from '@/hooks/useTodoService';
+import { useTodoData } from '@/hooks/useTodoData';
 import { AddTodo } from './AddTodo';
 import { TodoList } from './TodoList';
 
 export const TodoApp: React.FC = () => {
-  const todos = useTodos();
+  const todos = useTodoData();
 
   const completedCount = todos.filter(todo => todo.completed).length;
   const totalCount = todos.length;
