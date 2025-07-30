@@ -1,40 +1,36 @@
 import { create } from 'zustand';
-import { Todo, CreateTodoRequest } from '@/types/Todo';
-import { container } from '@/container/container';
-import { TYPES } from '@/constants/types';
-import { ITodoService } from '@/services/interfaces/ITodoService';
+import { Todo } from '@/types/Todo';
 
 interface TodoState {
   todos: Todo[];
-  addTodo: (request: CreateTodoRequest) => void;
-  toggleTodo: (id: string) => void;
+  setTodos: (todos: Todo[]) => void;
+  addTodo: (todo: Todo) => void;
+  updateTodo: (id: string, updates: Partial<Todo>) => void;
   removeTodo: (id: string) => void;
-  refreshTodos: () => void;
 }
 
-export const useTodoStore = create<TodoState>((set, get) => {
-  const todoService = container.get<ITodoService>(TYPES.TodoService);
+export const useTodoStore = create<TodoState>((set) => ({
+  todos: [],
 
-  return {
-    todos: [],
-    
-    addTodo: (request: CreateTodoRequest) => {
-      todoService.addTodo(request);
-      set({ todos: todoService.getAllTodos() });
-    },
-    
-    toggleTodo: (id: string) => {
-      todoService.toggleTodo(id);
-      set({ todos: todoService.getAllTodos() });
-    },
-    
-    removeTodo: (id: string) => {
-      todoService.removeTodo(id);
-      set({ todos: todoService.getAllTodos() });
-    },
-    
-    refreshTodos: () => {
-      set({ todos: todoService.getAllTodos() });
-    },
-  };
-});
+  setTodos: (todos: Todo[]) => {
+    set({ todos });
+  },
+
+  addTodo: (todo: Todo) => {
+    set(state => ({ todos: [...state.todos, todo] }));
+  },
+
+  updateTodo: (id: string, updates: Partial<Todo>) => {
+    set(state => ({
+      todos: state.todos.map(todo =>
+        todo.id === id ? { ...todo, ...updates } : todo
+      )
+    }));
+  },
+
+  removeTodo: (id: string) => {
+    set(state => ({
+      todos: state.todos.filter(todo => todo.id !== id)
+    }));
+  },
+}));

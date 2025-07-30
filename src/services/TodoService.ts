@@ -1,13 +1,17 @@
-import { injectable } from 'inversify';
+import { injectable, inject } from 'inversify';
 import { Todo, CreateTodoRequest } from '@/types/Todo';
 import { ITodoService } from '@/services/interfaces/ITodoService';
+import type { ITodoStore } from '@/store/interfaces/ITodoStore';
+import { TYPES } from '@/constants/types';
 
 @injectable()
 export class TodoService implements ITodoService {
-  private todos: Todo[] = [];
+  constructor(
+    @inject(TYPES.TodoStore) private todoStore: ITodoStore
+  ) {}
 
   getAllTodos(): Todo[] {
-    return [...this.todos];
+    return this.todoStore.getTodos();
   }
 
   addTodo(request: CreateTodoRequest): Todo {
@@ -17,19 +21,20 @@ export class TodoService implements ITodoService {
       completed: false,
       createdAt: new Date(),
     };
-    
-    this.todos.push(newTodo);
+
+    this.todoStore.addTodo(newTodo);
     return newTodo;
   }
 
   toggleTodo(id: string): void {
-    const todo = this.todos.find(t => t.id === id);
+    const todos = this.todoStore.getTodos();
+    const todo = todos.find(t => t.id === id);
     if (todo) {
-      todo.completed = !todo.completed;
+      this.todoStore.updateTodo(id, { completed: !todo.completed });
     }
   }
 
   removeTodo(id: string): void {
-    this.todos = this.todos.filter(t => t.id !== id);
+    this.todoStore.removeTodo(id);
   }
 }

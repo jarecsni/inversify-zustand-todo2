@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { useTodoStore } from '@/store/todoStore';
+import { useTodoService } from '@/hooks/useTodoService';
 
 export const AddTodo: React.FC = () => {
   const [text, setText] = useState('');
-  const addTodo = useTodoStore(state => state.addTodo);
+  const todoService = useTodoService();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim()) {
-      addTodo({ text: text.trim() });
+      todoService.addTodo({ text: text.trim() });
       setText('');
     }
   };
