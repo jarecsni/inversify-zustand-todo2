@@ -5,4 +5,5 @@ export interface ITodoService {
   addTodo(request: CreateTodoRequest): Todo;
   toggleTodo(id: string): void;
   removeTodo(id: string): void;
+  subscribe(callback: (todos: Todo[]) => void): () => void;
 }

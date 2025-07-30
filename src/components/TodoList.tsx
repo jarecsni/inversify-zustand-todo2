@@ -1,9 +1,9 @@
 import React from 'react';
-import { useTodoStore } from '@/store/todoStore';
+import { useTodos } from '@/hooks/useTodoService';
 import { TodoItem } from './TodoItem';
 
 export const TodoList: React.FC = () => {
-  const todos = useTodoStore(state => state.todos);
+  const todos = useTodos();
 
   if (todos.length === 0) {
     return (
