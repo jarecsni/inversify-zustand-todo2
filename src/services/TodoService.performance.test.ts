@@ -1,4 +1,4 @@
-import { TodoService } from '../TodoService';
+import { TodoService } from './TodoService';
 import { MasterStore } from '@/store/MasterStore';
 import { container } from '@/container/container';
 import { TYPES } from '@/constants/types';

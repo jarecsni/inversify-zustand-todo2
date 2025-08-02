@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { TodoApp } from '../TodoApp';
+import { TodoApp } from './TodoApp';
 import { container } from '@/container/container';
 import { TYPES } from '@/constants/types';
 import { MasterStore } from '@/store/MasterStore';

@@ -1,4 +1,4 @@
-import { MasterStore } from '../MasterStore';
+import { MasterStore } from './MasterStore';
 import { Todo } from '@/types/Todo';
 
 describe('MasterStore Performance Tests', () => {
