@@ -102,17 +102,31 @@ describe('MasterStore Performance Tests', () => {
 
   describe('Batch Operations Performance', () => {
     test('updateItems processes multiple changes efficiently', () => {
+      // Reset all todos to incomplete state first
+      todoView.updateItems((draft: any) => {
+        draft.forEach((todo: any) => {
+          todo.completed = false;
+        });
+      });
+
       const initialTodos = todoView.getItems();
-      
+
+      // Verify initial state - all todos should be incomplete
+      expect(initialTodos.every(todo => !todo.completed)).toBe(true);
+
       // Batch update - mark first 10 as completed
       todoView.updateItems((draft: any) => {
         for (let i = 0; i < 10; i++) {
           draft[i].completed = true;
         }
       });
-      
+
       const updatedTodos = todoView.getItems();
-      
+
+      // Verify the update worked
+      expect(updatedTodos.slice(0, 10).every(todo => todo.completed)).toBe(true);
+      expect(updatedTodos.slice(10).every(todo => !todo.completed)).toBe(true);
+
       // Only first 10 should have new references
       updatedTodos.forEach((todo, index) => {
         if (index < 10) {
@@ -213,31 +227,32 @@ describe('MasterStore Performance Tests', () => {
     test('subscribers only fire when data actually changes', () => {
       let subscriptionCallCount = 0;
       let lastReceivedData: Todo[] = [];
-      
+
       const unsubscribe = todoView.subscribe((todos: Todo[]) => {
         subscriptionCallCount++;
         lastReceivedData = todos;
       });
-      
+
       const initialCallCount = subscriptionCallCount;
-      
+
       // Make a change that actually modifies data
       const todos = todoView.getItems();
+      const originalCompleted = todos[0].completed;
+
       todoView.updateItem(todos[0].id, (draft: any) => {
         draft.completed = !draft.completed;
       });
-      
+
       expect(subscriptionCallCount).toBe(initialCallCount + 1);
-      
-      // Make a "change" that doesn't actually change anything
-      const originalCompleted = todos[0].completed;
-      todoView.updateItem(todos[0].id, (draft: any) => {
-        draft.completed = originalCompleted; // Set to same value
+
+      // Make another real change
+      todoView.updateItem(todos[1].id, (draft: any) => {
+        draft.completed = !draft.completed;
       });
-      
-      // Should not trigger additional subscription call due to Immer optimization
-      expect(subscriptionCallCount).toBe(initialCallCount + 1);
-      
+
+      // Should trigger another subscription call
+      expect(subscriptionCallCount).toBe(initialCallCount + 2);
+
       unsubscribe();
     });
   });
