@@ -6,14 +6,6 @@ export interface Identifiable {
   id: string;
 }
 
-// StoreView interface for typed access to store slices (for single values)
-export interface StoreView<T> {
-  get(): T;
-  set(value: T): void;
-  update(updater: (current: T) => T): void;
-  subscribe(callback: (value: T) => void): () => void;
-}
-
 // CollectionView interface for typed access to collections of entities
 export interface CollectionView<T extends Identifiable> {
   // Core collection operations
@@ -33,38 +25,6 @@ interface MasterStoreState {
   data: Record<string, any>;
   setData: (key: string, value: any) => void;
   updateData: (key: string, updater: (current: any) => any) => void;
-}
-
-// Implementation of StoreView that provides typed access to a store slice
-class StoreViewImpl<T> implements StoreView<T> {
-  constructor(
-    private store: any, // Temporarily use any to fix the build
-    private key: string,
-    private defaultValue: T
-  ) {}
-
-  get(): T {
-    const state = this.store.getState();
-    return state.data[this.key] ?? this.defaultValue;
-  }
-
-  set(value: T): void {
-    this.store.getState().setData(this.key, value);
-  }
-
-  update(updater: (current: T) => T): void {
-    // Get current value with default fallback, then update
-    const currentValue = this.get();
-    const newValue = updater(currentValue);
-    this.set(newValue);
-  }
-
-  subscribe(callback: (value: T) => void): () => void {
-    return this.store.subscribe((state: MasterStoreState) => {
-      const value = state.data[this.key] ?? this.defaultValue;
-      callback(value);
-    });
-  }
 }
 
 // Implementation of CollectionView that provides typed access to collections
@@ -123,7 +83,7 @@ class CollectionViewImpl<T extends Identifiable> implements CollectionView<T> {
 @injectable()
 export class MasterStore {
   private store: any; // Temporarily use any to fix the build
-  private viewCache = new Map<string, any>(); // Cache for both StoreView and CollectionView
+  private viewCache = new Map<string, any>(); // Cache for CollectionView instances
 
   constructor() {
     this.store = createStore<MasterStoreState>((set) => ({
@@ -142,19 +102,6 @@ export class MasterStore {
           },
         })),
     }));
-  }
-
-  // Get a typed view into a store slice (for single values)
-  getStore<T>(key: string, defaultValue: T): StoreView<T> {
-    // Use cached view if available
-    if (this.viewCache.has(key)) {
-      return this.viewCache.get(key) as StoreView<T>;
-    }
-
-    // Create new view and cache it
-    const view = new StoreViewImpl(this.store, key, defaultValue);
-    this.viewCache.set(key, view);
-    return view;
   }
 
   // Get a typed collection view (for arrays of entities)
