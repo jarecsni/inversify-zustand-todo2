@@ -106,9 +106,9 @@ describe('MasterStore Performance Tests', () => {
       
       // Batch update - mark first 10 as completed
       todoView.updateItems((draft: any) => {
-        draft.slice(0, 10).forEach((todo: any) => {
-          todo.completed = true;
-        });
+        for (let i = 0; i < 10; i++) {
+          draft[i].completed = true;
+        }
       });
       
       const updatedTodos = todoView.getItems();
@@ -230,8 +230,9 @@ describe('MasterStore Performance Tests', () => {
       expect(subscriptionCallCount).toBe(initialCallCount + 1);
       
       // Make a "change" that doesn't actually change anything
+      const originalCompleted = todos[0].completed;
       todoView.updateItem(todos[0].id, (draft: any) => {
-        draft.completed = draft.completed; // No actual change
+        draft.completed = originalCompleted; // Set to same value
       });
       
       // Should not trigger additional subscription call due to Immer optimization
