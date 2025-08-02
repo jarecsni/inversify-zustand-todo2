@@ -11,7 +11,7 @@ import { MasterStore } from '@/store/MasterStore';
 const PerformanceTrackedTodoItem = React.memo<{ todo: Todo; testId: string }>(({ todo, testId }) => {
   // Track render count
   React.useEffect(() => {
-    global.incrementRenderCount(testId);
+    (global as any).incrementRenderCount(testId);
   });
 
   return <TodoItem todo={todo} />;
@@ -22,7 +22,7 @@ describe('TodoItem Rendering Performance Tests', () => {
   let todoView: any;
 
   beforeEach(() => {
-    global.resetRenderCounts();
+    (global as any).resetRenderCounts();
 
     // Reset container and create fresh store
     container.unbindAll();
@@ -171,11 +171,11 @@ describe('TodoItem Rendering Performance Tests', () => {
       }
 
       const initialTodos = todoView.getItems();
-      const incompleteTodos = initialTodos.filter(t => !t.completed);
+      const incompleteTodos = initialTodos.filter((t: any) => !t.completed);
 
       // Update only incomplete todos
       todoView.updateItemsWhere(
-        (todo) => !todo.completed,
+        (todo: any) => !todo.completed,
         (draft: any) => {
           draft.completed = true;
           draft.completedAt = new Date();
@@ -188,7 +188,7 @@ describe('TodoItem Rendering Performance Tests', () => {
       let changedReferences = 0;
       let preservedReferences = 0;
 
-      updatedTodos.forEach((todo, index) => {
+      updatedTodos.forEach((todo: any, index: number) => {
         if (todo === initialTodos[index]) {
           preservedReferences++;
         } else {
@@ -204,7 +204,7 @@ describe('TodoItem Rendering Performance Tests', () => {
       expect(preservedReferences).toBe(20 - incompleteTodos.length);
 
       // Verify all todos are now completed
-      expect(updatedTodos.every(t => t.completed)).toBe(true);
+      expect(updatedTodos.every((t: any) => t.completed)).toBe(true);
     });
   });
 
@@ -228,7 +228,7 @@ describe('TodoItem Rendering Performance Tests', () => {
       
       // Render first 100 todos (simulating virtualization)
       const visibleTodos = initialTodos.slice(0, 100);
-      const todoComponents = visibleTodos.map((todo, index) => (
+      const todoComponents = visibleTodos.map((todo: any, index: number) => (
         <PerformanceTrackedTodoItem 
           key={todo.id} 
           todo={todo} 
@@ -255,7 +255,7 @@ describe('TodoItem Rendering Performance Tests', () => {
       // Verify no unnecessary re-renders in visible components
       // (since we updated item 500, which is not in the visible range 0-99)
       for (let i = 0; i < 100; i++) {
-        expect(global.getRenderCount(`large-todo-${i}`)).toBe(1);
+        expect((global as any).getRenderCount(`large-todo-${i}`)).toBe(1);
       }
     });
   });

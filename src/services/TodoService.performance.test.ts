@@ -55,17 +55,17 @@ describe('TodoService Performance Tests', () => {
 
     test('toggleTodo performance with large datasets', () => {
       // Create large dataset
-      const todos = [];
+      const todos: any[] = [];
       for (let i = 0; i < 1000; i++) {
         todos.push(todoService.addTodo({
           text: `Large Dataset Todo ${i}`
         }));
       }
-      
+
       // Test toggle performance at different positions
       const positions = [0, 250, 500, 750, 999]; // Beginning, middle, end
       const toggleTimings: number[] = [];
-      
+
       positions.forEach(position => {
         const todoId = todos[position].id;
         
@@ -159,15 +159,15 @@ describe('TodoService Performance Tests', () => {
       const operationStart = performance.now();
       
       // Rapid mixed operations
-      const todos = [];
-      
+      const todos: any[] = [];
+
       // Add 50 todos
       for (let i = 0; i < 50; i++) {
         todos.push(todoService.addTodo({
           text: `Rapid Op Todo ${i}`
         }));
       }
-      
+
       // Toggle first 25
       for (let i = 0; i < 25; i++) {
         todoService.toggleTodo(todos[i].id);
@@ -237,23 +237,23 @@ describe('TodoService Performance Tests', () => {
 
     test('mixed read/write operations maintain performance', () => {
       // Initial data
-      const todos = [];
+      const todos: any[] = [];
       for (let i = 0; i < 100; i++) {
         todos.push(todoService.addTodo({
           text: `Mixed Op Todo ${i}`
         }));
       }
-      
+
       const mixedOpStart = performance.now();
-      
+
       // Simulate mixed operations
-      const operations = [];
-      
+      const operations: (() => void)[] = [];
+
       // 10 read operations
       for (let i = 0; i < 10; i++) {
         operations.push(() => todoService.getAllTodos());
       }
-      
+
       // 10 write operations
       for (let i = 0; i < 10; i++) {
         operations.push(() => todoService.toggleTodo(todos[i].id));

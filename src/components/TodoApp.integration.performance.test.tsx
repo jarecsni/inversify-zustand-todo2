@@ -9,14 +9,14 @@ import { MasterStore } from '@/store/MasterStore';
 // Performance-tracked components
 const PerformanceTrackedTodoApp = React.memo(() => {
   React.useEffect(() => {
-    global.incrementRenderCount('TodoApp');
+    (global as any).incrementRenderCount('TodoApp');
   });
   return <TodoApp />;
 });
 
 const PerformanceTrackedTodoList = React.memo(() => {
   React.useEffect(() => {
-    global.incrementRenderCount('TodoList');
+    (global as any).incrementRenderCount('TodoList');
   });
   return <div data-testid="todo-list">Mock TodoList</div>;
 });
@@ -25,7 +25,7 @@ describe('TodoApp Integration Performance Tests', () => {
   let masterStore: MasterStore;
 
   beforeEach(() => {
-    global.resetRenderCounts();
+    (global as any).resetRenderCounts();
 
     // Reset container
     container.unbindAll();

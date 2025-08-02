@@ -8,14 +8,14 @@ Object.defineProperty(global, 'crypto', {
 });
 
 // Performance testing utilities
-global.renderCount = new Map();
-global.resetRenderCounts = () => {
-  global.renderCount.clear();
+(global as any).renderCount = new Map<string, number>();
+(global as any).resetRenderCounts = () => {
+  (global as any).renderCount.clear();
 };
-global.getRenderCount = (componentName: string) => {
-  return global.renderCount.get(componentName) || 0;
+(global as any).getRenderCount = (componentName: string) => {
+  return (global as any).renderCount.get(componentName) || 0;
 };
-global.incrementRenderCount = (componentName: string) => {
-  const current = global.renderCount.get(componentName) || 0;
-  global.renderCount.set(componentName, current + 1);
+(global as any).incrementRenderCount = (componentName: string) => {
+  const current = (global as any).renderCount.get(componentName) || 0;
+  (global as any).renderCount.set(componentName, current + 1);
 };

@@ -35,12 +35,12 @@ describe('MasterStore Performance Tests', () => {
       expect(updatedTodos).not.toBe(initialTodos);
       
       // Updated item should have new reference
-      const updatedItem = updatedTodos.find(t => t.id === targetId);
-      const originalItem = initialTodos.find(t => t.id === targetId);
+      const updatedItem = updatedTodos.find((t: Todo) => t.id === targetId);
+      const originalItem = initialTodos.find((t: Todo) => t.id === targetId);
       expect(updatedItem).not.toBe(originalItem);
       
       // All OTHER items should preserve their references (structural sharing)
-      updatedTodos.forEach((todo, index) => {
+      updatedTodos.forEach((todo: Todo, index: number) => {
         if (todo.id !== targetId) {
           expect(todo).toBe(initialTodos[index]);
         }
@@ -112,7 +112,7 @@ describe('MasterStore Performance Tests', () => {
       const initialTodos = todoView.getItems();
 
       // Verify initial state - all todos should be incomplete
-      expect(initialTodos.every(todo => !todo.completed)).toBe(true);
+      expect(initialTodos.every((todo: Todo) => !todo.completed)).toBe(true);
 
       // Batch update - mark first 10 as completed
       todoView.updateItems((draft: any) => {
@@ -124,11 +124,11 @@ describe('MasterStore Performance Tests', () => {
       const updatedTodos = todoView.getItems();
 
       // Verify the update worked
-      expect(updatedTodos.slice(0, 10).every(todo => todo.completed)).toBe(true);
-      expect(updatedTodos.slice(10).every(todo => !todo.completed)).toBe(true);
+      expect(updatedTodos.slice(0, 10).every((todo: Todo) => todo.completed)).toBe(true);
+      expect(updatedTodos.slice(10).every((todo: Todo) => !todo.completed)).toBe(true);
 
       // Only first 10 should have new references
-      updatedTodos.forEach((todo, index) => {
+      updatedTodos.forEach((todo: Todo, index: number) => {
         if (index < 10) {
           expect(todo).not.toBe(initialTodos[index]);
           expect(todo.completed).toBe(true);
@@ -141,11 +141,11 @@ describe('MasterStore Performance Tests', () => {
 
     test('updateItemsWhere selectively updates matching items', () => {
       const initialTodos = todoView.getItems();
-      const incompleteTodos = initialTodos.filter(t => !t.completed);
-      
+      const incompleteTodos = initialTodos.filter((t: Todo) => !t.completed);
+
       // Update all incomplete todos
       todoView.updateItemsWhere(
-        (todo) => !todo.completed,
+        (todo: Todo) => !todo.completed,
         (draft: any) => {
           draft.completed = true;
           draft.completedAt = new Date();
@@ -158,7 +158,7 @@ describe('MasterStore Performance Tests', () => {
       let changedReferences = 0;
       let preservedReferences = 0;
       
-      updatedTodos.forEach((todo, index) => {
+      updatedTodos.forEach((todo: Todo, index: number) => {
         if (todo === initialTodos[index]) {
           preservedReferences++;
         } else {
@@ -213,7 +213,7 @@ describe('MasterStore Performance Tests', () => {
       const updatedTodos = todoView.getItems();
       let preservedCount = 0;
       
-      updatedTodos.forEach((todo, index) => {
+      updatedTodos.forEach((todo: Todo, index: number) => {
         if (index !== 500 && todo === todos[index]) {
           preservedCount++;
         }
