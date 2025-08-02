@@ -1,4 +1,4 @@
 export const TYPES = {
   TodoService: Symbol.for('TodoService'),
-  TodoStore: Symbol.for('TodoStore'),
+  MasterStore: Symbol.for('MasterStore'),
 } as const;

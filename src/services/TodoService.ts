@@ -1,40 +1,39 @@
 import { injectable, inject } from 'inversify';
 import { Todo, CreateTodoRequest } from '@/types/Todo';
 import { ITodoService } from '@/services/interfaces/ITodoService';
-import type { ITodoStore } from '@/store/interfaces/ITodoStore';
+import { MasterStore, CollectionView } from '@/store/MasterStore';
 import { TYPES } from '@/constants/types';
 
 @injectable()
 export class TodoService implements ITodoService {
+  private todoCollection: CollectionView<Todo>;
+
   constructor(
-    @inject(TYPES.TodoStore) private todoStore: ITodoStore
-  ) {}
+    @inject(TYPES.MasterStore) private masterStore: MasterStore
+  ) {
+    this.todoCollection = this.masterStore.getCollection<Todo>('todos');
+  }
 
   getAllTodos(): Todo[] {
-    return this.todoStore.getTodos();
+    return this.todoCollection.getItems();
   }
 
   addTodo(request: CreateTodoRequest): Todo {
-    const newTodo: Todo = {
-      id: crypto.randomUUID(),
+    return this.todoCollection.addItem({
       text: request.text,
       completed: false,
       createdAt: new Date(),
-    };
-
-    this.todoStore.addTodo(newTodo);
-    return newTodo;
+    });
   }
 
   toggleTodo(id: string): void {
-    const todos = this.todoStore.getTodos();
-    const todo = todos.find(t => t.id === id);
-    if (todo) {
-      this.todoStore.updateTodo(id, { completed: !todo.completed });
-    }
+    this.todoCollection.updateItem(id, (todo) => ({
+      ...todo,
+      completed: !todo.completed,
+    }));
   }
 
   removeTodo(id: string): void {
-    this.todoStore.removeTodo(id);
+    this.todoCollection.removeItem(id);
   }
 }
