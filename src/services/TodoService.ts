@@ -23,10 +23,9 @@ export class TodoService implements ITodoService {
   }
 
   toggleTodo(id: string): void {
-    this.todoView.updateItem(id, (todo) => ({
-      ...todo,
-      completed: !todo.completed,
-    }));
+    this.todoView.updateItem(id, (draft) => {
+      draft.completed = !draft.completed;
+    });
   }
 
   removeTodo(id: string): void {

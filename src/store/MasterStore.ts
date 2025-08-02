@@ -1,29 +1,37 @@
 import { injectable } from "inversify";
 import { createStore } from "zustand/vanilla";
+import { produce, Draft } from "immer";
 
 // Base interface for entities that can be stored in collections
 export interface Identifiable {
   id: string;
 }
 
-// Unified interface for both single items and collections
+// Unified interface for both single items and collections - Pure Immer approach
 export interface StoreView<T extends Identifiable> {
-  // Single item operations
+  // Read operations
   getItem(): T | undefined;
-  setItem(item: T): void;
-  setItem(item: Omit<T, "id">): T;
-
-  // Collection operations
   getItems(): T[];
   getItems(filter: (item: T) => boolean): T[];
-  addItem(item: Omit<T, "id">): T;
-  updateItem(id: string, updater: (item: T) => T): void;
-  removeItem(id: string): void;
   findItem(predicate: (item: T) => boolean): T | undefined;
-  clearItems(): void;
-
-  // Reactive subscriptions
   subscribe(callback: (items: T[]) => void): () => void;
+
+  // Write operations - ALL use Immer Draft pattern
+  setItem(item: T): void;                                           // Replace with complete object
+  setItem(item: Omit<T, "id">): T;                                 // Create new with auto-ID
+  setItem(updater: (draft: Draft<T>) => void): void;               // Mutate single item (for single-item collections)
+
+  addItem(item: Omit<T, "id">): T;                                 // Create new item
+  updateItem(id: string, updater: (draft: Draft<T>) => void): void; // Mutate specific item
+  removeItem(id: string): void;                                    // Remove item
+  clearItems(): void;                                              // Clear all
+
+  // Batch operations
+  updateItems(updater: (draft: Draft<T[]>) => void): void;         // Mutate entire collection
+  updateItemsWhere(                                                // Mutate items matching predicate
+    predicate: (item: T) => boolean,
+    updater: (draft: Draft<T>) => void
+  ): void;
 }
 
 // Internal state interface for the master store
@@ -45,15 +53,25 @@ class StoreViewImpl<T extends Identifiable> implements StoreView<T> {
 
   setItem(item: T): void;
   setItem(item: Omit<T, "id">): T;
-  setItem(item: T | Omit<T, "id">): T | void {
-    if ('id' in item) {
+  setItem(updater: (draft: Draft<T>) => void): void;
+  setItem(itemOrUpdater: T | Omit<T, "id"> | ((draft: Draft<T>) => void)): T | void {
+    if (typeof itemOrUpdater === 'function') {
+      // Draft updater function
+      const currentItems = this.getItems();
+      const firstItem = currentItems[0];
+      if (firstItem) {
+        const updatedItem = produce(firstItem, itemOrUpdater as (draft: Draft<T>) => void);
+        this.store.getState().setData(this.key, [updatedItem]);
+      }
+      return;
+    } else if ('id' in itemOrUpdater) {
       // Replace existing item or set as single item
-      this.store.getState().setData(this.key, [item]);
+      this.store.getState().setData(this.key, [itemOrUpdater]);
       return;
     } else {
       // Create new item with ID
       const newItem = {
-        ...item,
+        ...itemOrUpdater,
         id: Date.now().toString() + Math.random().toString(36).substring(2, 11),
       } as T;
       this.store.getState().setData(this.key, [newItem]);
@@ -83,11 +101,14 @@ class StoreViewImpl<T extends Identifiable> implements StoreView<T> {
     return newItem;
   }
 
-  updateItem(id: string, updater: (item: T) => T): void {
+  updateItem(id: string, updater: (draft: Draft<T>) => void): void {
     const currentItems = this.getItems();
-    const updatedItems = currentItems.map((item) =>
-      item.id === id ? updater(item) : item
-    );
+    const updatedItems = produce(currentItems, draft => {
+      const item = draft.find(item => item.id === id);
+      if (item) {
+        updater(item);
+      }
+    });
     this.store.getState().setData(this.key, updatedItems);
   }
 
@@ -104,6 +125,25 @@ class StoreViewImpl<T extends Identifiable> implements StoreView<T> {
 
   clearItems(): void {
     this.store.getState().setData(this.key, []);
+  }
+
+  updateItems(updater: (draft: Draft<T[]>) => void): void {
+    const currentItems = this.getItems();
+    const updatedItems = produce(currentItems, updater);
+    this.store.getState().setData(this.key, updatedItems);
+  }
+
+  updateItemsWhere(predicate: (item: T) => boolean, updater: (draft: Draft<T>) => void): void {
+    const currentItems = this.getItems();
+    const updatedItems = produce(currentItems, draft => {
+      draft.forEach((item, index) => {
+        // Check predicate on original item structure
+        if (predicate(currentItems[index])) {
+          updater(item);
+        }
+      });
+    });
+    this.store.getState().setData(this.key, updatedItems);
   }
 
   subscribe(callback: (items: T[]) => void): () => void {
