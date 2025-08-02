@@ -10,16 +10,16 @@ export const useTodoData = (): readonly Todo[] => {
     return container.get<MasterStore>(TYPES.MasterStore);
   }, []);
 
-  const todoCollection = useMemo(() => {
-    return masterStore.getCollection<Todo>('todos');
+  const todoView = useMemo(() => {
+    return masterStore.getView<Todo>('todos');
   }, [masterStore]);
 
-  const [todos, setTodos] = useState<Todo[]>(() => todoCollection.getItems());
+  const [todos, setTodos] = useState<Todo[]>(() => todoView.getItems());
 
   useEffect(() => {
-    const unsubscribe = todoCollection.subscribe(setTodos);
+    const unsubscribe = todoView.subscribe(setTodos);
     return unsubscribe;
-  }, [todoCollection]);
+  }, [todoView]);
 
   return todos;
 };

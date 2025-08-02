@@ -1,25 +1,25 @@
 import { injectable, inject } from 'inversify';
 import { Todo, CreateTodoRequest } from '@/types/Todo';
 import { ITodoService } from '@/services/interfaces/ITodoService';
-import { MasterStore, CollectionView } from '@/store/MasterStore';
+import { MasterStore, StoreView } from '@/store/MasterStore';
 import { TYPES } from '@/constants/types';
 
 @injectable()
 export class TodoService implements ITodoService {
-  private todoCollection: CollectionView<Todo>;
+  private todoView: StoreView<Todo>;
 
   constructor(
     @inject(TYPES.MasterStore) private masterStore: MasterStore
   ) {
-    this.todoCollection = this.masterStore.getCollection<Todo>('todos');
+    this.todoView = this.masterStore.getView<Todo>('todos');
   }
 
   getAllTodos(): Todo[] {
-    return this.todoCollection.getItems();
+    return this.todoView.getItems();
   }
 
   addTodo(request: CreateTodoRequest): Todo {
-    return this.todoCollection.addItem({
+    return this.todoView.addItem({
       text: request.text,
       completed: false,
       createdAt: new Date(),
@@ -27,13 +27,13 @@ export class TodoService implements ITodoService {
   }
 
   toggleTodo(id: string): void {
-    this.todoCollection.updateItem(id, (todo) => ({
+    this.todoView.updateItem(id, (todo) => ({
       ...todo,
       completed: !todo.completed,
     }));
   }
 
   removeTodo(id: string): void {
-    this.todoCollection.removeItem(id);
+    this.todoView.removeItem(id);
   }
 }
