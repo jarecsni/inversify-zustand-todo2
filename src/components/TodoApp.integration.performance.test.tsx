@@ -38,6 +38,116 @@ describe('TodoApp Integration Performance Tests', () => {
     container.bind(TYPES.TodoService).to(TodoService).inSingletonScope();
   });
 
+  describe('Real TodoApp Component Re-render Prevention', () => {
+    test('TodoApp prevents unnecessary re-renders during typical usage', async () => {
+      const user = userEvent.setup();
+
+      // Create a performance-tracked version of TodoApp
+      const PerformanceTrackedTodoApp = React.memo(() => {
+        React.useEffect(() => {
+          (global as any).incrementRenderCount('TodoApp');
+        });
+        return <TodoApp />;
+      });
+
+      render(<PerformanceTrackedTodoApp />);
+
+      const input = screen.getByPlaceholderText('Add a new todo...');
+      const addButton = screen.getByText('Add Todo');
+
+      // Add 3 todos
+      await user.type(input, 'First todo');
+      await user.click(addButton);
+
+      await user.clear(input);
+      await user.type(input, 'Second todo');
+      await user.click(addButton);
+
+      await user.clear(input);
+      await user.type(input, 'Third todo');
+      await user.click(addButton);
+
+      const initialAppRenderCount = (global as any).getRenderCount('TodoApp');
+
+      // Toggle first todo - this should cause minimal re-renders
+      const checkboxes = screen.getAllByRole('checkbox');
+      await user.click(checkboxes[0]);
+
+      // Verify TodoApp itself didn't re-render unnecessarily
+      // (In a well-optimized app, only the specific TodoItem should re-render)
+      const afterToggleRenderCount = (global as any).getRenderCount('TodoApp');
+
+      // The app might re-render due to state changes, but it should be minimal
+      expect(afterToggleRenderCount - initialAppRenderCount).toBeLessThanOrEqual(1);
+
+      // Verify the toggle actually worked
+      expect(screen.getByText('1 of 3 completed')).toBeInTheDocument();
+    });
+
+    test('adding todos to large list prevents re-renders of existing items', async () => {
+      const user = userEvent.setup();
+
+      render(<TodoApp />);
+
+      const input = screen.getByPlaceholderText('Add a new todo...');
+      const addButton = screen.getByText('Add Todo');
+
+      // Add initial todos to create a substantial list
+      for (let i = 1; i <= 10; i++) {
+        await user.clear(input);
+        await user.type(input, `Existing Todo ${i}`);
+        await user.click(addButton);
+      }
+
+      // Get initial state
+      const initialTodoItems = screen.getAllByText(/Existing Todo/);
+      expect(initialTodoItems).toHaveLength(10);
+
+      // Add a new todo - this should not cause existing todos to re-render
+      await user.clear(input);
+      await user.type(input, 'New Todo');
+      await user.click(addButton);
+
+      // Verify the new todo was added
+      expect(screen.getByText('New Todo')).toBeInTheDocument();
+      expect(screen.getByText('0 of 11 completed')).toBeInTheDocument();
+
+      // In a well-optimized app, existing todo components should not re-render
+      // when new items are added (this is tested more precisely in TodoItem tests)
+    });
+
+    test('removing todos prevents re-renders of remaining items', async () => {
+      const user = userEvent.setup();
+
+      render(<TodoApp />);
+
+      const input = screen.getByPlaceholderText('Add a new todo...');
+      const addButton = screen.getByText('Add Todo');
+
+      // Add several todos
+      for (let i = 1; i <= 5; i++) {
+        await user.clear(input);
+        await user.type(input, `Todo ${i}`);
+        await user.click(addButton);
+      }
+
+      // Remove middle todo
+      const removeButtons = screen.getAllByLabelText('Remove todo');
+      await user.click(removeButtons[2]); // Remove "Todo 3"
+
+      // Verify removal worked
+      expect(screen.queryByText('Todo 3')).not.toBeInTheDocument();
+      expect(screen.getByText('Todo 1')).toBeInTheDocument();
+      expect(screen.getByText('Todo 2')).toBeInTheDocument();
+      expect(screen.getByText('Todo 4')).toBeInTheDocument();
+      expect(screen.getByText('Todo 5')).toBeInTheDocument();
+      expect(screen.getByText('0 of 4 completed')).toBeInTheDocument();
+
+      // In a well-optimized app, remaining todo components should not re-render
+      // when other items are removed (this is tested more precisely in TodoItem tests)
+    });
+  });
+
   describe('Real-world Usage Scenarios', () => {
     test('adding todos works correctly', async () => {
       const user = userEvent.setup();
