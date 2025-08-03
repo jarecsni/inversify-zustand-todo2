@@ -1,10 +1,7 @@
 import 'reflect-metadata';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { TodoApp } from '@/components/TodoApp';
-import { DIProvider } from '@/providers/DIProvider';
-import { container as diContainer } from '@/container/container';
-import { TYPES } from '@/constants/types';
+import { TodoApp, TodoFeatureProvider } from '@/features/todo';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -13,13 +10,7 @@ if (!rootElement) {
 
 const root = createRoot(rootElement);
 root.render(
-  <DIProvider
-    container={diContainer}
-    serviceTypes={{
-      TodoService: TYPES.TodoService,
-      MasterStore: TYPES.MasterStore,
-    }}
-  >
+  <TodoFeatureProvider>
     <TodoApp />
-  </DIProvider>
+  </TodoFeatureProvider>
 );
