@@ -1,10 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { TodoApp } from './TodoApp';
-import { DIProvider } from '@/providers/DIProvider';
-import { container } from '@/container/container';
-import { TYPES } from '@/constants/types';
+import { TodoApp, TodoFeatureProvider } from '../index';
 import { MasterStore } from '@/store/MasterStore';
 
 // Performance-tracked components
@@ -22,18 +19,12 @@ const PerformanceTrackedTodoList = React.memo(() => {
   return <div data-testid="todo-list">Mock TodoList</div>;
 });
 
-// Helper to wrap components with DIProvider for tests
-const renderWithDI = (component: React.ReactElement) => {
+// Helper to wrap components with TodoFeatureProvider for tests
+const renderWithTodoFeature = (component: React.ReactElement, masterStore?: MasterStore) => {
   return render(
-    <DIProvider
-      container={container}
-      serviceTypes={{
-        TodoService: TYPES.TodoService,
-        MasterStore: TYPES.MasterStore,
-      }}
-    >
+    <TodoFeatureProvider masterStore={masterStore}>
       {component}
-    </DIProvider>
+    </TodoFeatureProvider>
   );
 };
 
@@ -43,15 +34,8 @@ describe('TodoApp Integration Performance Tests', () => {
   beforeEach(() => {
     (global as any).resetRenderCounts();
 
-    // Reset container
-    container.unbindAll();
+    // Create fresh MasterStore for each test
     masterStore = new MasterStore();
-    container.bind(TYPES.MasterStore).toConstantValue(masterStore);
-    container.bind(TYPES.TodoView).toDynamicValue(() => masterStore.getView('todos')).inSingletonScope();
-
-    // Import and bind TodoService
-    const { TodoService } = require('@/services/TodoService');
-    container.bind(TYPES.TodoService).to(TodoService).inSingletonScope();
   });
 
   describe('Real TodoApp Component Re-render Prevention', () => {
@@ -66,7 +50,7 @@ describe('TodoApp Integration Performance Tests', () => {
         return <TodoApp />;
       });
 
-      renderWithDI(<PerformanceTrackedTodoApp />);
+      renderWithTodoFeature(<PerformanceTrackedTodoApp />, masterStore);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -103,7 +87,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('adding todos to large list prevents re-renders of existing items', async () => {
       const user = userEvent.setup();
 
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -135,7 +119,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('removing todos prevents re-renders of remaining items', async () => {
       const user = userEvent.setup();
 
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -168,7 +152,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('adding todos works correctly', async () => {
       const user = userEvent.setup();
 
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -199,7 +183,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('toggling todo completion works correctly', async () => {
       const user = userEvent.setup();
 
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -231,7 +215,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('removing todos works correctly', async () => {
       const user = userEvent.setup();
 
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -266,7 +250,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('handles multiple operations efficiently', async () => {
       const user = userEvent.setup();
 
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -305,7 +289,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('memory usage remains stable during operations', async () => {
       const user = userEvent.setup();
 
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -355,7 +339,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('handles empty state transitions efficiently', async () => {
       const user = userEvent.setup();
       
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
       
       // Start with empty state
       expect(screen.getByText('No todos yet. Add one above to get started!')).toBeInTheDocument();
@@ -383,7 +367,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('handles rapid state changes without performance degradation', async () => {
       const user = userEvent.setup();
       
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
       
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -417,7 +401,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('handles simultaneous add and toggle operations', async () => {
       const user = userEvent.setup();
       
-      renderWithDI(<TodoApp />);
+      renderWithTodoFeature(<TodoApp />, masterStore);
       
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');

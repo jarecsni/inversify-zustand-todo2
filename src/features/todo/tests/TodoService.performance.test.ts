@@ -1,21 +1,15 @@
-import { TodoService } from './TodoService';
+import { TodoService, createTestTodoContainer, TODO_TYPES } from '../index';
 import { MasterStore } from '@/store/MasterStore';
-import { container } from '@/container/container';
-import { TYPES } from '@/constants/types';
 
 describe('TodoService Performance Tests', () => {
   let todoService: TodoService;
   let masterStore: MasterStore;
 
   beforeEach(() => {
-    // Reset container
-    container.unbindAll();
+    // Create fresh container and store for each test
     masterStore = new MasterStore();
-    container.bind(TYPES.MasterStore).toConstantValue(masterStore);
-    container.bind(TYPES.TodoView).toDynamicValue(() => masterStore.getView('todos')).inSingletonScope();
-    container.bind(TYPES.TodoService).to(TodoService).inSingletonScope();
-    
-    todoService = container.get(TYPES.TodoService);
+    const container = createTestTodoContainer(masterStore);
+    todoService = container.get(TODO_TYPES.TodoService);
   });
 
   describe('Service Operation Performance', () => {
