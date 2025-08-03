@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useDIMasterStore } from '@/providers/DIProvider';
 import type { Todo } from '@/types/Todo';
 
-// Read-only hook that subscribes to todo collection data
+// Completely portable hook - no hard-coded container dependencies!
 export const useTodoData = (): readonly Todo[] => {
   const masterStore = useDIMasterStore();
 

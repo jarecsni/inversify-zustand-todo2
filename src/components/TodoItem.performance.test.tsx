@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TodoItem } from './TodoItem';
+import { DIProvider } from '@/providers/DIProvider';
 import { Todo } from '@/types/Todo';
 import { container } from '@/container/container';
 import { TYPES } from '@/constants/types';
@@ -16,6 +17,21 @@ const PerformanceTrackedTodoItem = React.memo<{ todo: Todo; testId: string }>(({
 
   return <TodoItem todo={todo} />;
 });
+
+// Helper to wrap components with DIProvider for tests
+const renderWithDI = (component: React.ReactElement) => {
+  return render(
+    <DIProvider
+      container={container}
+      serviceTypes={{
+        TodoService: TYPES.TodoService,
+        MasterStore: TYPES.MasterStore,
+      }}
+    >
+      {component}
+    </DIProvider>
+  );
+};
 
 describe('TodoItem Rendering Performance Tests', () => {
   let masterStore: MasterStore;
@@ -40,14 +56,14 @@ describe('TodoItem Rendering Performance Tests', () => {
   describe('Actual Component Re-render Prevention', () => {
     test('components do NOT re-render when other items change', () => {
       // Create multiple todos
-      const todo1 = todoView.addItem({ text: 'Todo 1', completed: false, createdAt: new Date() });
+      todoView.addItem({ text: 'Todo 1', completed: false, createdAt: new Date() });
       const todo2 = todoView.addItem({ text: 'Todo 2', completed: false, createdAt: new Date() });
-      const todo3 = todoView.addItem({ text: 'Todo 3', completed: false, createdAt: new Date() });
+      todoView.addItem({ text: 'Todo 3', completed: false, createdAt: new Date() });
 
       const initialTodos = todoView.getItems();
 
       // Render all three components
-      const { rerender } = render(
+      const { rerender } = renderWithDI(
         <div>
           <PerformanceTrackedTodoItem todo={initialTodos[0]} testId="todo-1" />
           <PerformanceTrackedTodoItem todo={initialTodos[1]} testId="todo-2" />
@@ -100,7 +116,7 @@ describe('TodoItem Rendering Performance Tests', () => {
 
       const initialTodos = todoView.getItems();
 
-      const { rerender } = render(
+      const { rerender } = renderWithDI(
         <div>
           <PerformanceTrackedTodoItem todo={initialTodos[0]} testId="complex-todo-1" />
           <PerformanceTrackedTodoItem todo={initialTodos[1]} testId="complex-todo-2" />
@@ -134,7 +150,7 @@ describe('TodoItem Rendering Performance Tests', () => {
 
       const initialTodos = todoView.getItems();
 
-      const { rerender } = render(
+      const { rerender } = renderWithDI(
         <div>
           <PerformanceTrackedTodoItem todo={initialTodos[0]} testId="existing-1" />
           <PerformanceTrackedTodoItem todo={initialTodos[1]} testId="existing-2" />
@@ -168,7 +184,7 @@ describe('TodoItem Rendering Performance Tests', () => {
 
       const initialTodos = todoView.getItems();
 
-      const { rerender } = render(
+      const { rerender } = renderWithDI(
         <div>
           <PerformanceTrackedTodoItem todo={initialTodos[0]} testId="todo-1" />
           <PerformanceTrackedTodoItem todo={initialTodos[1]} testId="todo-2" />
@@ -294,7 +310,7 @@ describe('TodoItem Rendering Performance Tests', () => {
         />
       ));
 
-      const { rerender } = render(<div>{todoComponents}</div>);
+      const { rerender } = renderWithDI(<div>{todoComponents}</div>);
 
       // Verify initial render counts
       for (let i = 0; i < 10; i++) {
@@ -351,7 +367,7 @@ describe('TodoItem Rendering Performance Tests', () => {
         />
       ));
 
-      const { rerender } = render(<div>{todoComponents}</div>);
+      const { rerender } = renderWithDI(<div>{todoComponents}</div>);
 
       // Update only incomplete todos (should be indices: 1, 2, 4, 5, 7, 8, 10, 11)
       todoView.updateItemsWhere(
@@ -515,7 +531,7 @@ describe('TodoItem Rendering Performance Tests', () => {
         />
       ));
 
-      const { rerender } = render(<div>{todoComponents}</div>);
+      const { rerender } = renderWithDI(<div>{todoComponents}</div>);
 
       // Verify initial render
       for (let i = 0; i < 20; i++) {
@@ -572,7 +588,7 @@ describe('TodoItem Rendering Performance Tests', () => {
         />
       ));
 
-      const { rerender } = render(<div>{todoComponents}</div>);
+      const { rerender } = renderWithDI(<div>{todoComponents}</div>);
 
       // Batch update - mark todos with specific text pattern as completed
       todoView.updateItemsWhere(
@@ -644,7 +660,7 @@ describe('TodoItem Rendering Performance Tests', () => {
       ));
       
       const renderStart = performance.now();
-      render(<div>{todoComponents}</div>);
+      renderWithDI(<div>{todoComponents}</div>);
       const renderTime = performance.now() - renderStart;
       
       // Update single item in the middle of large dataset

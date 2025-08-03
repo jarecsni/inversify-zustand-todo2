@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TodoApp } from './TodoApp';
+import { DIProvider } from '@/providers/DIProvider';
 import { container } from '@/container/container';
 import { TYPES } from '@/constants/types';
 import { MasterStore } from '@/store/MasterStore';
@@ -20,6 +21,21 @@ const PerformanceTrackedTodoList = React.memo(() => {
   });
   return <div data-testid="todo-list">Mock TodoList</div>;
 });
+
+// Helper to wrap components with DIProvider for tests
+const renderWithDI = (component: React.ReactElement) => {
+  return render(
+    <DIProvider
+      container={container}
+      serviceTypes={{
+        TodoService: TYPES.TodoService,
+        MasterStore: TYPES.MasterStore,
+      }}
+    >
+      {component}
+    </DIProvider>
+  );
+};
 
 describe('TodoApp Integration Performance Tests', () => {
   let masterStore: MasterStore;
@@ -50,7 +66,7 @@ describe('TodoApp Integration Performance Tests', () => {
         return <TodoApp />;
       });
 
-      render(<PerformanceTrackedTodoApp />);
+      renderWithDI(<PerformanceTrackedTodoApp />);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -87,7 +103,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('adding todos to large list prevents re-renders of existing items', async () => {
       const user = userEvent.setup();
 
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -119,7 +135,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('removing todos prevents re-renders of remaining items', async () => {
       const user = userEvent.setup();
 
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -152,7 +168,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('adding todos works correctly', async () => {
       const user = userEvent.setup();
 
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -183,7 +199,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('toggling todo completion works correctly', async () => {
       const user = userEvent.setup();
 
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -215,7 +231,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('removing todos works correctly', async () => {
       const user = userEvent.setup();
 
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -250,7 +266,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('handles multiple operations efficiently', async () => {
       const user = userEvent.setup();
 
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -289,7 +305,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('memory usage remains stable during operations', async () => {
       const user = userEvent.setup();
 
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
 
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -339,7 +355,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('handles empty state transitions efficiently', async () => {
       const user = userEvent.setup();
       
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
       
       // Start with empty state
       expect(screen.getByText('No todos yet. Add one above to get started!')).toBeInTheDocument();
@@ -367,7 +383,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('handles rapid state changes without performance degradation', async () => {
       const user = userEvent.setup();
       
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
       
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');
@@ -401,7 +417,7 @@ describe('TodoApp Integration Performance Tests', () => {
     test('handles simultaneous add and toggle operations', async () => {
       const user = userEvent.setup();
       
-      render(<TodoApp />);
+      renderWithDI(<TodoApp />);
       
       const input = screen.getByPlaceholderText('Add a new todo...');
       const addButton = screen.getByText('Add Todo');

@@ -2,12 +2,24 @@ import 'reflect-metadata';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { TodoApp } from '@/components/TodoApp';
-import '@/container/container'; // Initialize the DI container
+import { DIProvider } from '@/providers/DIProvider';
+import { container as diContainer } from '@/container/container';
+import { TYPES } from '@/constants/types';
 
-const container = document.getElementById('root');
-if (!container) {
+const rootElement = document.getElementById('root');
+if (!rootElement) {
   throw new Error('Root element not found');
 }
 
-const root = createRoot(container);
-root.render(<TodoApp />);
+const root = createRoot(rootElement);
+root.render(
+  <DIProvider
+    container={diContainer}
+    serviceTypes={{
+      TodoService: TYPES.TodoService,
+      MasterStore: TYPES.MasterStore,
+    }}
+  >
+    <TodoApp />
+  </DIProvider>
+);
