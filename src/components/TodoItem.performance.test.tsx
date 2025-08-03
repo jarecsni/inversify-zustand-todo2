@@ -33,6 +33,19 @@ const renderWithDI = (component: React.ReactElement) => {
   );
 };
 
+// Helper to wrap rerender calls with DIProvider
+const wrapWithDI = (component: React.ReactElement) => (
+  <DIProvider
+    container={container}
+    serviceTypes={{
+      TodoService: TYPES.TodoService,
+      MasterStore: TYPES.MasterStore,
+    }}
+  >
+    {component}
+  </DIProvider>
+);
+
 describe('TodoItem Rendering Performance Tests', () => {
   let masterStore: MasterStore;
   let todoView: any;
@@ -84,13 +97,13 @@ describe('TodoItem Rendering Performance Tests', () => {
       const updatedTodos = todoView.getItems();
 
       // Re-render with updated todos (simulating React state update)
-      rerender(
+      rerender(wrapWithDI(
         <div>
           <PerformanceTrackedTodoItem todo={updatedTodos[0]} testId="todo-1" />
           <PerformanceTrackedTodoItem todo={updatedTodos[1]} testId="todo-2" />
           <PerformanceTrackedTodoItem todo={updatedTodos[2]} testId="todo-3" />
         </div>
-      );
+      ));
 
       // CRITICAL TEST: Only todo-2 should have re-rendered due to React.memo + structural sharing
       expect((global as any).getRenderCount('todo-1')).toBe(1); // NO re-render (same object reference)
@@ -131,12 +144,12 @@ describe('TodoItem Rendering Performance Tests', () => {
 
       const updatedTodos = todoView.getItems();
 
-      rerender(
+      rerender(wrapWithDI(
         <div>
           <PerformanceTrackedTodoItem todo={updatedTodos[0]} testId="complex-todo-1" />
           <PerformanceTrackedTodoItem todo={updatedTodos[1]} testId="complex-todo-2" />
         </div>
-      );
+      ));
 
       // CRITICAL TEST: Only the modified component should re-render
       expect((global as any).getRenderCount('complex-todo-1')).toBe(2); // Re-rendered (nested change)
@@ -162,13 +175,13 @@ describe('TodoItem Rendering Performance Tests', () => {
       const updatedTodos = todoView.getItems();
 
       // Re-render existing components (new todo would be rendered separately)
-      rerender(
+      rerender(wrapWithDI(
         <div>
           <PerformanceTrackedTodoItem todo={updatedTodos[0]} testId="existing-1" />
           <PerformanceTrackedTodoItem todo={updatedTodos[1]} testId="existing-2" />
           <PerformanceTrackedTodoItem todo={updatedTodos[2]} testId="new-todo" />
         </div>
-      );
+      ));
 
       // CRITICAL TEST: Existing components should NOT re-render when collection grows
       expect((global as any).getRenderCount('existing-1')).toBe(1); // NO re-render
@@ -197,12 +210,12 @@ describe('TodoItem Rendering Performance Tests', () => {
       const updatedTodos = todoView.getItems();
 
       // Re-render remaining components
-      rerender(
+      rerender(wrapWithDI(
         <div>
           <PerformanceTrackedTodoItem todo={updatedTodos[0]} testId="todo-1" />
           <PerformanceTrackedTodoItem todo={updatedTodos[1]} testId="todo-3" />
         </div>
-      );
+      ));
 
       // CRITICAL TEST: Components with same object references should NOT re-render
       // Note: todo-3 might re-render due to position change in React, but the important thing
@@ -335,7 +348,7 @@ describe('TodoItem Rendering Performance Tests', () => {
         />
       ));
 
-      rerender(<div>{updatedComponents}</div>);
+      rerender(wrapWithDI(<div>{updatedComponents}</div>));
 
       // CRITICAL TEST: Only first 3 should have re-rendered
       for (let i = 0; i < 10; i++) {
@@ -389,7 +402,7 @@ describe('TodoItem Rendering Performance Tests', () => {
         />
       ));
 
-      rerender(<div>{updatedComponents}</div>);
+      rerender(wrapWithDI(<div>{updatedComponents}</div>));
 
       // CRITICAL TEST: Only incomplete todos should have re-rendered
       for (let i = 0; i < 12; i++) {
@@ -556,7 +569,7 @@ describe('TodoItem Rendering Performance Tests', () => {
         />
       ));
 
-      rerender(<div>{updatedComponents}</div>);
+      rerender(wrapWithDI(<div>{updatedComponents}</div>));
 
       // CRITICAL TEST: Only the changed component should re-render
       for (let i = 0; i < 20; i++) {
@@ -610,7 +623,7 @@ describe('TodoItem Rendering Performance Tests', () => {
         />
       ));
 
-      rerender(<div>{updatedComponents}</div>);
+      rerender(wrapWithDI(<div>{updatedComponents}</div>));
 
       // CRITICAL TEST: Only every 5th component should re-render
       let reRenderedCount = 0;
